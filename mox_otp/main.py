@@ -1,48 +1,56 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
-from sys import argv
+import sys
 from hashlib import sha512
-from binascii import hexlify
 from struct import pack, unpack
 
+
+SYSFS_ROOT = "/sys/devices/platform/soc/soc:internal-regs@d0000000/soc:internal-regs@d0000000:crypto@0/"
+PUBKEY_PATH = SYSFS_ROOT + "mox_pubkey"
+SIGN_PATH = SYSFS_ROOT + "mox_do_sign"
+
+
 def change_endian(s):
-	res = b''
-	for i in range(0, len(s), 4):
-		res += pack(">I", unpack("<I", s[i:i+4])[0])
-	return res
+    res = b''
+    for i in range(0, len(s), 4):
+        res += pack(">I", unpack("<I", s[i:i+4])[0])
+    return res
 
-path = "/sys/devices/platform/soc/soc:internal-regs@d0000000/soc:internal-regs@d0000000:crypto@0/"
-pubkey_path = path + "mox_pubkey"
-sign_path = path + "mox_do_sign"
 
-pubkey = open(pubkey_path).read()
+def main():
+    pubkey = open(PUBKEY_PATH).read()
 
-if pubkey == "none\n":
-	print("no public key burned")
-	exit(1)
+    if pubkey == "none\n":
+        print("no public key burned")
+        exit(1)
 
-print("MOX burned public key: %s" % (pubkey,))
+    print("MOX burned public key: {}".format(pubkey))
 
-if len(argv) < 2:
-	print("message not given")
-	exit(1)
+    if len(sys.argv) < 2:
+        print("message not given")
+        exit(1)
 
-print("message: %s" % (argv[1],))
+    message = sys.argv[1]
+    print("message: {}".format(message))
 
-h = sha512()
-h.update(argv[1].encode("utf-8"))
-dig = h.digest()
+    h = sha512()
+    h.update(bytes(message, encoding='utf-8'))
+    dig = h.digest()
 
-print("message hash: %s" % (h.hexdigest(),))
+    print("message hash: {}".format(h.hexdigest()))
 
-s = open(sign_path, "wb")
-s.write(change_endian(dig))
-s.close()
+    s = open(SIGN_PATH, "wb")
+    s.write(change_endian(dig))
+    s.close()
 
-s = open(sign_path, "rb")
-sig = s.read()
-s.close()
+    s = open(SIGN_PATH, "rb")
+    sig = s.read()
+    s.close()
 
-sig = change_endian(sig)
+    sig = change_endian(sig)
 
-print("signature: %s" % (hexlify(sig[2:68] + sig[70:]).decode("ascii"),))
+    print("signature: {}".format((sig[2:68] + sig[70:]).hex()))
+
+
+if __name__ == "__main__":
+    main()
