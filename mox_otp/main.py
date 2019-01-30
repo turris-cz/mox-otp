@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import sys
+import os
 from hashlib import sha512
 from struct import pack, unpack
 
@@ -24,13 +25,19 @@ def change_endian(s):
     return res
 
 
+def check_sysfs():
+    if not os.path.isdir(SYSFS_ROOT):
+        errprint("sysfs root directory does not exists (probably not running on MOX device)")
+        exit(2)
+
+
 def check_pubkey():
     try:
         with open(PUBKEY_PATH, "r") as f:
             pubkey = f.readline()
     except (FileNotFoundError, PermissionError):
-        errprint("Could not find MOX pubkey file (probably not running on MOX device)")
-        exit(2)
+        errprint("The sysfs API is probably broken – could not find MOX pubkey file")
+        exit(3)
 
     if pubkey in ["", "\n", "none\n"]:
         errprint("This device does not have its OTP key generated or accessible")
@@ -38,6 +45,8 @@ def check_pubkey():
 
 
 def sign_message(message):
+    check_pubkey()
+
     h = sha512()
     h.update(bytes(message, encoding="utf-8"))
     dig = h.digest()
@@ -48,14 +57,14 @@ def sign_message(message):
         with open(SIGN_PATH, "rb") as s:
             sig = change_endian(s.read(MAX_SIGNATURE_LENGTH))
     except (FileNotFoundError, PermissionError):
-        errprint("Could not find MOX sign file – the sysfs API is probably broken")
+        errprint("The sysfs API is probably broken – could not find MOX sign file")
         exit(3)
 
     print((sig[2:68] + sig[70:]).hex())
 
 
 def main():
-    check_pubkey()
+    check_sysfs()
 
     if len(sys.argv) < 2:
         print("message not given")
