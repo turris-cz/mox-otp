@@ -11,6 +11,7 @@ VERSION="0.1-alpha"
 SYSFS_ROOT = "/sys/devices/platform/soc/soc:internal-regs@d0000000/soc:internal-regs@d0000000:crypto@0/"
 PUBKEY_PATH = SYSFS_ROOT + "mox_pubkey"
 SIGN_PATH = SYSFS_ROOT + "mox_do_sign"
+SERIAL_PATH = SYSFS_ROOT + "mox_serial_number"
 
 # number of bytes to read at once
 CHUNK_SIZE = 1024
@@ -30,6 +31,12 @@ USAGE="""USAGE
 
         {0} version
                     Print script version and exits
+
+        {0} serial-number
+                    Print serial number of the device
+
+        {0} public-key
+                    Print public key of the device
 
         {0} sign [file]
                     Sign given file or standard input if no file is given
@@ -54,6 +61,15 @@ def check_sysfs():
     if not os.path.isdir(SYSFS_ROOT):
         errprint("sysfs root directory does not exists (probably not running on MOX device)")
         exit(2)
+
+
+def check_serial():
+    try:
+        with open(SERIAL_PATH, "r") as f:
+            f.readline()
+    except (FileNotFoundError, PermissionError):
+        errprint("The sysfs API is probably broken – could not find MOX serial file")
+        exit(3)
 
 
 def check_pubkey():
@@ -120,6 +136,14 @@ def sign_file(f):
     return sig
 
 
+def do_serial():
+    check_sysfs()
+    check_serial()
+    with open(SERIAL_PATH, "r") as f:
+        serial = f.readline()
+    print(serial.rstrip("\n"))
+
+
 def do_sign(filename=None):
     check_sysfs()
     check_pubkey()
@@ -174,6 +198,18 @@ def main():
 
     elif command == "version":
         print(VERSION)
+
+    elif command in ["serial-number", "serial"]:
+        if not len(sys.argv) == 2:
+            errprint("`serial-number` does not take eny arguments")
+            exit(1)
+        do_serial()
+
+    elif command in ["public-key", "pubkey"]:
+        if not len(sys.argv) == 2:
+            errprint("`public-key` does not take eny arguments")
+            exit(1)
+        do_pubkey()
 
     elif command == "sign":
         if len(sys.argv) == 2:
