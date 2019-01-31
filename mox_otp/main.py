@@ -33,7 +33,11 @@ USAGE="""USAGE
 
         {0} sign [file]
                     Sign given file or standard input if no file is given
-""".format(SCRIPTNAME)
+
+        {0} sign-hash hash
+                    Sign given {1} hash; it must include only hexadecimal characters
+""".format(SCRIPTNAME, HASH_TYPE)
+
 
 def errprint(*args, **kwargs):
     print(*args, **kwargs, file=sys.stderr)
@@ -65,14 +69,29 @@ def check_pubkey():
         exit(2)
 
 
-def count_hash_from_file(f):
-    '''f is opened file for reading in binary mode
-    '''
+def hash_type():
+    """Returns constructed hash of HASH_TYPE
+    """
     try:
         h = hashlib.new(HASH_TYPE)
     except ValueError:
         errprint("Hash type {} is not available".HASH_TYPE)
         exit(3)
+
+    return h
+
+
+def hash_type_length():
+    """Returns number of bytes for HASH_TYPE
+    """
+    h = hash_type()
+    return h.digest_size
+
+
+def count_hash_from_file(f):
+    """f is opened file for reading in binary mode
+    """
+    h = hash_type()
 
     for chunk in iter(lambda: f.read(CHUNK_SIZE), b""):
         h.update(chunk)
@@ -121,6 +140,28 @@ def do_sign(filename=None):
     print(sig.hex())
 
 
+def do_sign_hash(hex_digest):
+    check_sysfs()
+    check_pubkey()
+
+    # check hexstring length
+    desired_len = 2*hash_type_length()
+    if len(hex_digest) != desired_len:
+        errprint("Given hash must be exactly {} characters long".format(desired_len))
+        exit(1)
+
+    # construct bytes from hexstring
+    try:
+        dig = bytes.fromhex(hex_digest)
+    except ValueError:
+        errprint("Given hash includes non-hexadecimal character")
+        exit(1)
+
+    # sign the hash
+    sig = sign_hash(dig)
+    print(sig.hex())
+
+
 def main():
     if len(sys.argv) < 2:
         errprint("No command was passed")
@@ -144,6 +185,12 @@ def main():
         else:
             errprint("Too many arguments for command `sign`")
             exit(1)
+
+    elif command == "sign-hash":
+        if not len(sys.argv) == 3:
+            errprint("`sign-hash` needs exactly one argument")
+            exit(1)
+        do_sign_hash(sys.argv[2])
 
     else:
         errprint("Unknown command '{}'".format(command))
