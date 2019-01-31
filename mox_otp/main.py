@@ -2,7 +2,7 @@
 
 import sys
 import os
-from hashlib import sha512
+import hashlib
 from struct import pack, unpack
 
 
@@ -10,6 +10,10 @@ SYSFS_ROOT = "/sys/devices/platform/soc/soc:internal-regs@d0000000/soc:internal-
 PUBKEY_PATH = SYSFS_ROOT + "mox_pubkey"
 SIGN_PATH = SYSFS_ROOT + "mox_do_sign"
 
+# number of bytes to read at once
+CHUNK_SIZE = 1024
+# hash algorithm used for message signature
+HASH_TYPE = "sha512"
 # max number of bytes to read from sysfs sig file
 MAX_SIGNATURE_LENGTH = 512
 
@@ -44,35 +48,55 @@ def check_pubkey():
         exit(2)
 
 
-def sign_message(message):
-    check_pubkey()
+def count_hash_from_file(f):
+    '''f is opened file for reading in binary mode
+    '''
+    try:
+        h = hashlib.new(HASH_TYPE)
+    except ValueError:
+        errprint("Hash type {} is not available".HASH_TYPE)
+        exit(3)
 
-    h = sha512()
-    h.update(bytes(message, encoding="utf-8"))
-    dig = h.digest()
+    for chunk in iter(lambda: f.read(CHUNK_SIZE), b""):
+        h.update(chunk)
 
+    return h.digest()
+
+
+def sign_hash(h):
+    """h must be bytes processed with HASH_TYPE algorithm
+    """
     try:
         with open(SIGN_PATH, "wb") as s:
-            s.write(change_endian(dig))
+            s.write(change_endian(h))
         with open(SIGN_PATH, "rb") as s:
             sig = change_endian(s.read(MAX_SIGNATURE_LENGTH))
     except (FileNotFoundError, PermissionError):
         errprint("The sysfs API is probably broken – could not find MOX sign file")
         exit(3)
 
-    print((sig[2:68] + sig[70:]).hex())
+    return sig[2:68] + sig[70:]
+
+
+def sign_file(f):
+    check_pubkey()
+    dig = count_hash_from_file(f)
+    sig = sign_hash(dig)
+    return sig
 
 
 def main():
     check_sysfs()
 
     if len(sys.argv) < 2:
-        print("message not given")
+        print("file is not given")
         exit(1)
 
     message = sys.argv[1]
-    sign_message(message)
+    with open(message, 'rb') as f:
+        sig = sign_file(f)
 
+    print(sig.hex())
 
 if __name__ == "__main__":
     main()
