@@ -85,6 +85,12 @@ def check_pubkey():
         exit(2)
 
 
+def print_first_line_of_file(filename):
+    with open(filename, "r") as f:
+        line = f.readline()
+    print(line.rstrip("\n"))
+
+
 def hash_type():
     """Returns constructed hash of HASH_TYPE
     """
@@ -139,9 +145,13 @@ def sign_file(f):
 def do_serial():
     check_sysfs()
     check_serial()
-    with open(SERIAL_PATH, "r") as f:
-        serial = f.readline()
-    print(serial.rstrip("\n"))
+    print_first_line_of_file(SERIAL_PATH)
+
+
+def do_pubkey():
+    check_sysfs()
+    check_pubkey()
+    print_first_line_of_file(PUBKEY_PATH)
 
 
 def do_sign(filename=None):
