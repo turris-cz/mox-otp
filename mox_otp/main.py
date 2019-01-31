@@ -79,24 +79,55 @@ def sign_hash(h):
 
 
 def sign_file(f):
-    check_pubkey()
     dig = count_hash_from_file(f)
     sig = sign_hash(dig)
     return sig
 
 
-def main():
+def do_sign(filename=None):
     check_sysfs()
+    check_pubkey()
 
-    if len(sys.argv) < 2:
-        print("file is not given")
-        exit(1)
-
-    message = sys.argv[1]
-    with open(message, 'rb') as f:
-        sig = sign_file(f)
+    if not filename:
+        sig = sign_file(sys.stdin.buffer)
+    else:
+        try:
+            with open(filename, "rb") as f:
+                sig = sign_file(f)
+        except IsADirectoryError:
+            errprint("'{}' is a directory".format(filename))
+            exit(1)
+        except (FileNotFoundError, PermissionError):
+            errprint("File '{}' does not exists or is not readable".format(filename))
+            exit(1)
 
     print(sig.hex())
+
+
+def main():
+    if len(sys.argv) < 2:
+        errprint("No command was passed")
+        errprint(USAGE)
+        exit(1)
+
+    command = sys.argv[1]
+    if command == "sign":
+        if len(sys.argv) == 2:
+            # sign the stdin
+            do_sign()
+        elif len(sys.argv) == 3:
+            # sign the given file
+            do_sign(sys.argv[2])
+        else:
+            errprint("Too many arguments for command `sign`")
+            errprint(USAGE)
+            exit(1)
+
+    else:
+        errprint("Unknown command '{}'".format(command))
+        errprint(USAGE)
+        exit(1)
+
 
 if __name__ == "__main__":
     main()
