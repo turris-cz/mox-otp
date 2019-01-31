@@ -63,10 +63,15 @@ def check_sysfs():
         exit(2)
 
 
+def first_line_of_file(filename):
+    with open(filename, "r") as f:
+        line = f.readline()
+    return line.rstrip("\n")
+
+
 def check_serial():
     try:
-        with open(SERIAL_PATH, "r") as f:
-            f.readline()
+        first_line_of_file(SERIAL_PATH)
     except (FileNotFoundError, PermissionError):
         errprint("The sysfs API is probably broken – could not find MOX serial file")
         exit(3)
@@ -74,8 +79,7 @@ def check_serial():
 
 def check_pubkey():
     try:
-        with open(PUBKEY_PATH, "r") as f:
-            pubkey = f.readline()
+        pubkey = first_line_of_file(PUBKEY_PATH)
     except (FileNotFoundError, PermissionError):
         errprint("The sysfs API is probably broken – could not find MOX pubkey file")
         exit(3)
@@ -83,12 +87,6 @@ def check_pubkey():
     if pubkey in ["", "\n", "none\n"]:
         errprint("This device does not have its OTP key generated or accessible")
         exit(2)
-
-
-def print_first_line_of_file(filename):
-    with open(filename, "r") as f:
-        line = f.readline()
-    print(line.rstrip("\n"))
 
 
 def hash_type():
@@ -145,13 +143,13 @@ def sign_file(f):
 def do_serial():
     check_sysfs()
     check_serial()
-    print_first_line_of_file(SERIAL_PATH)
+    print(first_line_of_file(SERIAL_PATH))
 
 
 def do_pubkey():
     check_sysfs()
     check_pubkey()
-    print_first_line_of_file(PUBKEY_PATH)
+    print(first_line_of_file(PUBKEY_PATH))
 
 
 def do_sign(filename=None):
