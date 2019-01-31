@@ -6,6 +6,8 @@ import hashlib
 from struct import pack, unpack
 
 
+VERSION="0.1-alpha"
+
 SYSFS_ROOT = "/sys/devices/platform/soc/soc:internal-regs@d0000000/soc:internal-regs@d0000000:crypto@0/"
 PUBKEY_PATH = SYSFS_ROOT + "mox_pubkey"
 SIGN_PATH = SYSFS_ROOT + "mox_do_sign"
@@ -17,6 +19,21 @@ HASH_TYPE = "sha512"
 # max number of bytes to read from sysfs sig file
 MAX_SIGNATURE_LENGTH = 512
 
+SCRIPTNAME="mox-otp"
+USAGE="""USAGE
+    General syntax:
+        {0} command [args..]
+
+    Available commands:
+        {0} help
+                    Print this message end exits
+
+        {0} version
+                    Print script version and exits
+
+        {0} sign [file]
+                    Sign given file or standard input if no file is given
+""".format(SCRIPTNAME)
 
 def errprint(*args, **kwargs):
     print(*args, **kwargs, file=sys.stderr)
@@ -111,7 +128,13 @@ def main():
         exit(1)
 
     command = sys.argv[1]
-    if command == "sign":
+    if command == "help":
+        print(USAGE)
+
+    elif command == "version":
+        print(VERSION)
+
+    elif command == "sign":
         if len(sys.argv) == 2:
             # sign the stdin
             do_sign()
@@ -120,7 +143,6 @@ def main():
             do_sign(sys.argv[2])
         else:
             errprint("Too many arguments for command `sign`")
-            errprint(USAGE)
             exit(1)
 
     else:
