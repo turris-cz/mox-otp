@@ -3,7 +3,6 @@
 import sys
 import os
 import hashlib
-from struct import pack, unpack
 
 
 VERSION="0.1-alpha"
@@ -48,13 +47,6 @@ USAGE="""USAGE
 
 def errprint(*args, **kwargs):
     print(*args, **kwargs, file=sys.stderr)
-
-
-def change_endian(s):
-    res = b''
-    for i in range(0, len(s), 4):
-        res += pack(">I", unpack("<I", s[i:i+4])[0])
-    return res
 
 
 def check_sysfs():
@@ -124,9 +116,9 @@ def sign_hash(h):
     """
     try:
         with open(SIGN_PATH, "wb") as s:
-            s.write(change_endian(h))
+            s.write(h)
         with open(SIGN_PATH, "rb") as s:
-            sig = change_endian(s.read(MAX_SIGNATURE_LENGTH))
+            sig = s.read(MAX_SIGNATURE_LENGTH)
     except (FileNotFoundError, PermissionError):
         errprint("The sysfs API is probably broken – could not find MOX sign file")
         exit(3)
