@@ -1,4 +1,6 @@
-#!/usr/bin/env python3
+"""
+Main entry point of MOX OTP package
+"""
 
 import sys
 import os
