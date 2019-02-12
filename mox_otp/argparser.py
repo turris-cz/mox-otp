@@ -6,6 +6,8 @@ import argparse
 import hashlib
 import sys
 
+from .exceptions import MoxOtpSetupError
+
 
 # hash algorithm used for message signature
 HASH_TYPE = "sha512"
@@ -18,8 +20,7 @@ def hash_type():
     try:
         h = hashlib.new(HASH_TYPE)
     except ValueError:
-        errprint("Hash type {} is not available".format(HASH_TYPE))
-        exit(3)
+        raise MoxOtpSetupError("Hash type {} is not available".format(HASH_TYPE))
 
     return h
 
