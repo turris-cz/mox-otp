@@ -4,9 +4,8 @@ Main entry point of MOX OTP package
 
 import sys
 import os
-import hashlib
 
-from .argparser import parse_args, HASH_TYPE
+from .argparser import parse_args, hash_type
 
 
 SYSFS_ROOT = "/sys/devices/platform/soc/soc:internal-regs@d0000000/soc:internal-regs@d0000000:crypto@0/"
@@ -56,25 +55,6 @@ def check_pubkey():
         exit(2)
 
 
-def hash_type():
-    """Returns constructed hash of HASH_TYPE
-    """
-    try:
-        h = hashlib.new(HASH_TYPE)
-    except ValueError:
-        errprint("Hash type {} is not available".HASH_TYPE)
-        exit(3)
-
-    return h
-
-
-def hash_type_length():
-    """Returns number of bytes for HASH_TYPE
-    """
-    h = hash_type()
-    return h.digest_size
-
-
 def count_hash_from_file(f):
     """f is opened file for reading in binary mode
     """
@@ -101,62 +81,40 @@ def sign_hash(h):
     return sig[2:68] + sig[70:]
 
 
-def sign_file(f):
-    dig = count_hash_from_file(f)
-    sig = sign_hash(dig)
-    return sig
-
-
 def do_serial():
+    """print serial number from OTP
+    """
     check_sysfs()
     check_serial()
     print(first_line_of_file(SERIAL_PATH))
 
 
 def do_pubkey():
+    """print public key from OTP
+    """
     check_sysfs()
     check_pubkey()
     print(first_line_of_file(PUBKEY_PATH))
 
 
-def do_sign(filename=None):
+def do_sign(inputfile):
+    """print signature of given (opened) binary input stream
+    """
     check_sysfs()
     check_pubkey()
 
-    if not filename:
-        sig = sign_file(sys.stdin.buffer)
-    else:
-        try:
-            with open(filename, "rb") as f:
-                sig = sign_file(f)
-        except IsADirectoryError:
-            errprint("'{}' is a directory".format(filename))
-            exit(1)
-        except (FileNotFoundError, PermissionError):
-            errprint("File '{}' does not exists or is not readable".format(filename))
-            exit(1)
-
+    dig = count_hash_from_file(inputfile)
+    sig = sign_hash(dig)
     print(sig.hex())
 
 
-def do_sign_hash(hex_digest):
+def do_sign_hash(hexstr):
+    """print signature of given hash
+    """
     check_sysfs()
     check_pubkey()
 
-    # check hexstring length
-    desired_len = 2*hash_type_length()
-    if len(hex_digest) != desired_len:
-        errprint("Given hash must be exactly {} characters long".format(desired_len))
-        exit(1)
-
-    # construct bytes from hexstring
-    try:
-        dig = bytes.fromhex(hex_digest)
-    except ValueError:
-        errprint("Given hash includes non-hexadecimal character")
-        exit(1)
-
-    # sign the hash
+    dig = bytes.fromhex(hexstr)
     sig = sign_hash(dig)
     print(sig.hex())
 

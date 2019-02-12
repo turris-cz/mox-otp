@@ -3,12 +3,50 @@ An argument parser for MOX OTP
 """
 
 import argparse
+import hashlib
+import sys
 
 
 # hash algorithm used for message signature
 HASH_TYPE = "sha512"
 VERSION="0.1-alpha"
 
+
+def hash_type():
+    """Returns constructed hash of HASH_TYPE
+    """
+    try:
+        h = hashlib.new(HASH_TYPE)
+    except ValueError:
+        errprint("Hash type {} is not available".format(HASH_TYPE))
+        exit(3)
+
+    return h
+
+
+def hash_type_length():
+    """Returns number of bytes for HASH_TYPE
+    """
+    h = hash_type()
+    return h.digest_size
+
+
+def type_hexstr(hexstr):
+    """Validate and return hex str
+    """
+
+    # check hexstring length
+    desired_len = 2*hash_type_length()
+    if len(hexstr) != desired_len:
+        raise argparse.ArgumentTypeError("Given hash must be exactly {} characters long".format(desired_len))
+
+    # construct bytes from hexstring
+    try:
+        bytes.fromhex(hexstr)
+    except ValueError:
+        raise argparse.ArgumentTypeError("Given hash includes non-hexadecimal character")
+
+    return hexstr
 
 
 def parse_args():
@@ -53,7 +91,8 @@ def parse_args():
             'infile',
             help="Input file name (stdin will be used if not given)",
             nargs="?",
-            default=None,
+            type=argparse.FileType("rb"),
+            default=sys.stdin.buffer,
     )
 
     sub = subparsers.add_parser(
@@ -63,6 +102,7 @@ def parse_args():
     sub.add_argument(
             'hash',
             help="A {} hash in hexadecimal form".format(HASH_TYPE),
+            type=type_hexstr,
     )
 
     return parser.parse_args()
