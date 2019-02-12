@@ -6,8 +6,8 @@ import sys
 import os
 import hashlib
 
+from .argparser import parse_args, HASH_TYPE
 
-VERSION="0.1-alpha"
 
 SYSFS_ROOT = "/sys/devices/platform/soc/soc:internal-regs@d0000000/soc:internal-regs@d0000000:crypto@0/"
 PUBKEY_PATH = SYSFS_ROOT + "mox_pubkey"
@@ -16,35 +16,8 @@ SERIAL_PATH = SYSFS_ROOT + "mox_serial_number"
 
 # number of bytes to read at once
 CHUNK_SIZE = 1024
-# hash algorithm used for message signature
-HASH_TYPE = "sha512"
 # max number of bytes to read from sysfs sig file
 MAX_SIGNATURE_LENGTH = 512
-
-SCRIPTNAME="mox-otp"
-USAGE="""USAGE
-    General syntax:
-        {0} command [args..]
-
-    Available commands:
-        {0} help
-                    Print this message end exits
-
-        {0} version
-                    Print script version and exits
-
-        {0} serial-number
-                    Print serial number of the device
-
-        {0} public-key
-                    Print public key of the device
-
-        {0} sign [file]
-                    Sign given file or standard input if no file is given
-
-        {0} sign-hash hash
-                    Sign given {1} hash; it must include only hexadecimal characters
-""".format(SCRIPTNAME, HASH_TYPE)
 
 
 def errprint(*args, **kwargs):
@@ -189,50 +162,22 @@ def do_sign_hash(hex_digest):
 
 
 def main():
-    if len(sys.argv) < 2:
-        errprint("No command was passed")
-        errprint(USAGE)
-        exit(1)
+    args = parse_args()
 
-    command = sys.argv[1]
-    if command == "help":
-        print(USAGE)
-
-    elif command == "version":
-        print(VERSION)
-
-    elif command in ["serial-number", "serial"]:
-        if not len(sys.argv) == 2:
-            errprint("`serial-number` does not take eny arguments")
-            exit(1)
+    if args.command in ["serial-number", "serial"]:
         do_serial()
 
-    elif command in ["public-key", "pubkey"]:
-        if not len(sys.argv) == 2:
-            errprint("`public-key` does not take eny arguments")
-            exit(1)
+    elif args.command in ["public-key", "pubkey", "key"]:
         do_pubkey()
 
-    elif command == "sign":
-        if len(sys.argv) == 2:
-            # sign the stdin
-            do_sign()
-        elif len(sys.argv) == 3:
-            # sign the given file
-            do_sign(sys.argv[2])
-        else:
-            errprint("Too many arguments for command `sign`")
-            exit(1)
+    elif args.command == "sign":
+        do_sign(args.infile)
 
-    elif command == "sign-hash":
-        if not len(sys.argv) == 3:
-            errprint("`sign-hash` needs exactly one argument")
-            exit(1)
-        do_sign_hash(sys.argv[2])
+    elif args.command == "sign-hash":
+        do_sign_hash(args.hash)
 
     else:
-        errprint("Unknown command '{}'".format(command))
-        errprint(USAGE)
+        errprint("Unknown command '{}'".format(args.command))
         exit(1)
 
 
