@@ -6,18 +6,13 @@ import os
 from functools import wraps
 
 from .exceptions import MoxOtpApiError, MoxOtpSetupError
+from .helpers import first_line_of_file
 
 
 SYSFS_ROOT = "/sys/devices/platform/soc/soc:internal-regs@d0000000/soc:internal-regs@d0000000:crypto@0/"
 PUBKEY_PATH = SYSFS_ROOT + "mox_pubkey"
 SIGN_PATH = SYSFS_ROOT + "mox_do_sign"
 SERIAL_PATH = SYSFS_ROOT + "mox_serial_number"
-
-
-def first_line_of_file(filename):
-    with open(filename, "r") as f:
-        line = f.readline()
-    return line.rstrip("\n")
 
 
 def check_sysfs():

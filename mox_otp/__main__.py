@@ -4,9 +4,11 @@ Main entry point of MOX OTP package
 
 import sys
 
-from .argparser import parse_args, hash_type
-from .checks import check_serial, check_pubkey, first_line_of_file
+from .argparser import parse_args
+from .checks import check_serial, check_pubkey
 from .exceptions import MoxOtpApiError, MoxOtpSetupError, MoxOtpUsageError
+from .helpers import errprint, first_line_of_file, hash_type
+
 
 from .checks import PUBKEY_PATH, SERIAL_PATH, SIGN_PATH
 
@@ -15,10 +17,6 @@ from .checks import PUBKEY_PATH, SERIAL_PATH, SIGN_PATH
 CHUNK_SIZE = 1024
 # max number of bytes to read from sysfs sig file
 MAX_SIGNATURE_LENGTH = 512
-
-
-def errprint(*args, **kwargs):
-    print(*args, **kwargs, file=sys.stderr)
 
 
 def count_hash_from_file(f):

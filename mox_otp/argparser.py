@@ -3,33 +3,14 @@ An argument parser for MOX OTP
 """
 
 import argparse
-import hashlib
 import sys
 
-from .exceptions import MoxOtpSetupError
+from .helpers import hash_type_length
+
+from .helpers import HASH_TYPE
 
 
-# hash algorithm used for message signature
-HASH_TYPE = "sha512"
-VERSION="0.1-alpha"
-
-
-def hash_type():
-    """Returns constructed hash of HASH_TYPE
-    """
-    try:
-        h = hashlib.new(HASH_TYPE)
-    except ValueError:
-        raise MoxOtpSetupError("Hash type {} is not available".format(HASH_TYPE))
-
-    return h
-
-
-def hash_type_length():
-    """Returns number of bytes for HASH_TYPE
-    """
-    h = hash_type()
-    return h.digest_size
+VERSION = '0.1-alpha'
 
 
 def type_hexstr(hexstr):
