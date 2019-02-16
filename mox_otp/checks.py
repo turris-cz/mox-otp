@@ -8,7 +8,7 @@ from functools import wraps
 from .exceptions import MoxOtpApiError, MoxOtpSetupError
 from .helpers import first_line_of_file
 
-from .__init__ import PUBKEY_PATH, SERIAL_PATH, SYSFS_ROOT
+from .__init__ import MAC_PATH, PUBKEY_PATH, SERIAL_PATH, SYSFS_ROOT
 
 
 def check_sysfs():
@@ -24,6 +24,19 @@ def check_serial(f):
             first_line_of_file(SERIAL_PATH)
         except (FileNotFoundError, PermissionError):
             raise MoxOtpApiError("Could not find MOX serial file")
+        return f(*args, **kwargs)
+
+    return _checked
+
+
+def check_mac(f):
+    @wraps(f)
+    def _checked(*args, **kwargs):
+        check_sysfs()
+        try:
+            first_line_of_file(MAC_PATH)
+        except (FileNotFoundError, PermissionError):
+            raise MoxOtpApiError("Could not find MOX MAC address file")
         return f(*args, **kwargs)
 
     return _checked

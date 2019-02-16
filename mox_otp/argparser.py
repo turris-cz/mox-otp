@@ -57,6 +57,12 @@ def parse_args():
     )
 
     sub = subparsers.add_parser(
+            "mac-address",
+            aliases=["mac"],
+            help="Print MAC address of the first Ethernet port",
+    )
+
+    sub = subparsers.add_parser(
             "public-key",
             aliases=["pubkey", "key"],
             help="Print public key of the device",

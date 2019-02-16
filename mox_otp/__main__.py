@@ -5,11 +5,11 @@ Main entry point of MOX OTP package
 import sys
 
 from .argparser import parse_args
-from .checks import check_serial, check_pubkey
+from .checks import check_mac, check_serial, check_pubkey
 from .exceptions import MoxOtpApiError, MoxOtpSetupError, MoxOtpUsageError
 from .helpers import errprint, first_line_of_file, hash_type
 
-from .__init__ import PUBKEY_PATH, SERIAL_PATH, SIGN_PATH
+from .__init__ import MAC_PATH, PUBKEY_PATH, SERIAL_PATH, SIGN_PATH
 
 # number of bytes to read at once
 CHUNK_SIZE = 1024
@@ -49,6 +49,13 @@ def do_serial():
     print(first_line_of_file(SERIAL_PATH))
 
 
+@check_mac
+def do_mac():
+    """print MAC address from OTP
+    """
+    print(first_line_of_file(MAC_PATH))
+
+
 @check_pubkey
 def do_pubkey():
     """print public key from OTP
@@ -80,6 +87,9 @@ def main():
 
         if args.command in ["serial-number", "serial"]:
             do_serial()
+
+        elif args.command in ["mac-address", "mac"]:
+            do_mac()
 
         elif args.command in ["public-key", "pubkey", "key"]:
             do_pubkey()
