@@ -13,6 +13,7 @@ SYSFS_ROOT = "/sys/devices/platform/soc/soc:internal-regs@d0000000/soc:internal-
 PUBKEY_PATH = SYSFS_ROOT + "mox_pubkey"
 SIGN_PATH = SYSFS_ROOT + "mox_do_sign"
 SERIAL_PATH = SYSFS_ROOT + "mox_serial_number"
+MAC_PATH = SYSFS_ROOT + "mox_mac_address1"
 
 
 def check_sysfs():
@@ -28,6 +29,19 @@ def check_serial(f):
             first_line_of_file(SERIAL_PATH)
         except (FileNotFoundError, PermissionError):
             raise MoxOtpApiError("Could not find MOX serial file")
+        return f(*args, **kwargs)
+
+    return _checked
+
+
+def check_mac(f):
+    @wraps(f)
+    def _checked(*args, **kwargs):
+        check_sysfs()
+        try:
+            first_line_of_file(MAC_PATH)
+        except (FileNotFoundError, PermissionError):
+            raise MoxOtpApiError("Could not find MOX MAC address file")
         return f(*args, **kwargs)
 
     return _checked
