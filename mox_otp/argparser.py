@@ -7,10 +7,8 @@ import sys
 
 from .helpers import hash_type_length
 
+from . import __version__
 from .helpers import HASH_TYPE
-
-
-VERSION = '0.1-alpha'
 
 
 def type_hexstr(hexstr):
@@ -41,7 +39,7 @@ def parse_args():
     parser.add_argument(
             "-v", "--version",
             action="version",
-            version="%(prog)s {}".format(VERSION)
+            version="%(prog)s {}".format(__version__)
     )
 
     subparsers = parser.add_subparsers(
