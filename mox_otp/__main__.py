@@ -9,9 +9,7 @@ from .checks import check_serial, check_pubkey
 from .exceptions import MoxOtpApiError, MoxOtpSetupError, MoxOtpUsageError
 from .helpers import errprint, first_line_of_file, hash_type
 
-
-from .checks import PUBKEY_PATH, SERIAL_PATH, SIGN_PATH
-
+from .__init__ import PUBKEY_PATH, SERIAL_PATH, SIGN_PATH
 
 # number of bytes to read at once
 CHUNK_SIZE = 1024

@@ -7,8 +7,7 @@ import sys
 
 from .helpers import hash_type_length
 
-from .__init__ import __version__
-from .helpers import HASH_TYPE
+from .__init__ import __version__, HASH_TYPE
 
 
 def type_hexstr(hexstr):

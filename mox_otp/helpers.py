@@ -7,9 +7,7 @@ import sys
 
 from .exceptions import MoxOtpSetupError
 
-
-# hash algorithm used for message signature
-HASH_TYPE = "sha512"
+from .__init__ import HASH_TYPE
 
 
 def errprint(*args, **kwargs):
