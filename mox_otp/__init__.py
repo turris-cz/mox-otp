@@ -2,7 +2,7 @@
 MOX OTP python package
 """
 
-__version__ = '0.1-alpha'
+__version__ = '0.1'
 
 
 # hash algorithm used for message signature
