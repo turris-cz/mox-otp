@@ -19,7 +19,7 @@ setup(
         packages=[
                 'mox_otp',
         ],
-        version=__version__
+        version=__version__,
         description='Command line tool to query MOX CPU read-only OTP device',
         long_description=get_description('README.md'),
         long_description_content_type='text/markdown',
