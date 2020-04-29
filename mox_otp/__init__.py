@@ -4,7 +4,7 @@ MOX OTP python package
 
 import os
 
-__version__ = '0.2'
+__version__ = '0.3'
 
 
 # hash algorithm used for message signature
